@@ -1,0 +1,36 @@
+
+
+yum install gcc-c++
+yum install -y pcre pcre-devel
+yum install -y zlib zlib-devel
+yum install -y openssl openssl-devel
+
+
+scp ~jason/Downloads/nginx-1.14.0.tar.gz root@:/tmp
+
+./configure --prefix=/usr/local/nginx/ --with-http_ssl_module --with-pcre
+
+make 
+
+make install
+
+
+events {
+    use epoll;
+	#使用操作系统的多路复用函数，这里设置为epoll最合适
+    worker_connections  65535;
+	#单个进程能接受的最大连接数，可以设置的更大，最大连接数=worker_processes*worker_connections
+    accept_mutex on;
+    
+    multi_accept on;
+	#告诉nginx接收到新的连接以后尽可能多的接受连接
+}
+
+	autoindex off;
+    server_tokens off; 
+	#不让用户看到nginx的版本，以防利用版本的漏洞进入nginx
+
+
+	log_format  access '{"client_addr":"$remote_addr","user":"$remote_user","time":"$time_local","request":"$request",'
+			'"url":"$http_host","upstream_status":$upstream_status,"status":$status,"bodysize":$body_bytes_sent, "url_upstream":"$http_referer",'
+			'"http_referer":"$http_referer","http_referer_agent":"$http_user_agent","ssl_protocol":"$ssl_protocol","upstream_addr":"$upstream_addr","request_time":$request_time,"upstream_response_time":$upstream_response_time}';
